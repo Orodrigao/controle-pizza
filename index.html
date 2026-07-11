@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🍕 Controle Pizza</title>
+<style>
+  :root {
+    --vermelho: #d62828;
+    --vermelho-escuro: #b21e1e;
+    --verde: #2a9d2a;
+    --verde-escuro: #1f7a1f;
+    --laranja: #f77f00;
+    --amarelo: #ffefd6;
+    --cinza-fundo: #f4f2ee;
+    --cinza-texto: #6b6b6b;
+    --preto: #2b2b2b;
+    --branco: #ffffff;
+    --borda: #e3ded6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--cinza-fundo);
+    color: var(--preto);
+    min-height: 100vh;
+    font-size: 16px;
+  }
+  .hidden { display: none !important; }
+
+  /* ===== LOGIN ===== */
+  #tela-login {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(160deg, #d62828 0%, #8f1d1d 100%);
+  }
+  .card-login {
+    background: var(--branco);
+    border-radius: 20px;
+    padding: 32px 24px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.35);
+  }
+  .card-login h1 { text-align: center; font-size: 28px; margin-bottom: 4px; }
+  .card-login p.sub { text-align: center; color: var(--cinza-texto); margin-bottom: 24px; }
+
+  /* ===== APP ===== */
+  header {
+    background: var(--vermelho);
+    color: #fff;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 { font-size: 19px; }
+  header button {
+    background: rgba(255,255,255,.18);
+    border: none; color: #fff;
+    padding: 8px 14px; border-radius: 10px;
+    font-size: 14px; cursor: pointer;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 16px 14px 90px; }
+
+  nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--branco);
+    border-top: 1px solid var(--borda);
+    display: flex;
+    z-index: 10;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  nav button {
+    flex: 1; background: none; border: none;
+    padding: 10px 4px 12px;
+    font-size: 12px; color: var(--cinza-texto);
+    cursor: pointer; line-height: 1.3;
+  }
+  nav button .ico { display: block; font-size: 22px; margin-bottom: 2px; }
+  nav button.ativo { color: var(--vermelho); font-weight: 700; }
+
+  .cartao {
+    background: var(--branco);
+    border-radius: 16px;
+    padding: 18px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  }
+  .cartao h2 { font-size: 17px; margin-bottom: 12px; }
+  .cartao h2 small { color: var(--cinza-texto); font-weight: 400; font-size: 13px; }
+
+  label { display: block; font-size: 14px; font-weight: 600; margin: 12px 0 5px; }
+  input, select {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid var(--borda);
+    border-radius: 12px;
+    font-size: 17px;
+    background: #fff;
+    color: var(--preto);
+  }
+  input:focus, select:focus { outline: none; border-color: var(--laranja); }
+
+  .botao {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 16px;
+    color: #fff;
+    background: var(--vermelho);
+    transition: transform .05s;
+  }
+  .botao:active { transform: scale(.98); }
+  .botao.verde { background: var(--verde); }
+  .botao:disabled { opacity: .6; }
+
+  .botao-mini {
+    border: none; border-radius: 10px;
+    padding: 10px 14px; font-size: 14px; font-weight: 700;
+    cursor: pointer; color: #fff;
+  }
+  .botao-mini.verde { background: var(--verde); }
+  .botao-mini.cinza { background: #b5b0a8; }
+  .botao-mini.vermelho-claro { background: none; color: var(--vermelho); font-size: 18px; padding: 6px 10px; }
+
+  .msg {
+    padding: 12px 14px; border-radius: 12px;
+    font-size: 15px; margin-top: 14px; display: none;
+  }
+  .msg.erro { display: block; background: #fde8e8; color: #a11212; }
+  .msg.ok { display: block; background: #e5f6e5; color: #1f7a1f; }
+
+  /* toast */
+  #toast {
+    position: fixed; bottom: 80px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--preto); color: #fff;
+    padding: 13px 22px; border-radius: 30px;
+    font-size: 15px; font-weight: 600;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s;
+    z-index: 50; white-space: nowrap;
+    max-width: 90vw;
+  }
+  #toast.mostrar { opacity: 1; }
+  #toast.ok { background: var(--verde-escuro); }
+  #toast.erro { background: var(--vermelho-escuro); }
+
+  /* listas */
+  .item-lista {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--borda);
+  }
+  .item-lista:last-child { border-bottom: none; }
+  .item-lista .info { flex: 1; min-width: 0; }
+  .item-lista .titulo { font-weight: 600; font-size: 15px; }
+  .item-lista .detalhe { font-size: 13px; color: var(--cinza-texto); margin-top: 2px; }
+  .item-lista .valor { font-weight: 700; font-size: 16px; white-space: nowrap; }
+  .vazio { text-align: center; color: var(--cinza-texto); padding: 18px 8px; font-size: 15px; }
+
+  .etiqueta {
+    display: inline-block; font-size: 11.5px; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px; margin-top: 3px;
+  }
+  .etiqueta.vencida { background: #fde8e8; color: #a11212; }
+  .etiqueta.hoje { background: #fff3d6; color: #8a6100; }
+  .etiqueta.paga { background: #e5f6e5; color: #1f7a1f; }
+
+  /* resumo do dia */
+  .resumo-dia { display: flex; gap: 10px; }
+  .resumo-dia .bloco {
+    flex: 1; border-radius: 14px; padding: 14px 12px; text-align: center;
+  }
+  .resumo-dia .bloco .rotulo { font-size: 13px; font-weight: 600; }
+  .resumo-dia .bloco .num { font-size: 20px; font-weight: 800; margin-top: 4px; }
+  .bloco.loja { background: #fff0e0; color: #8a4b00; }
+  .bloco.ifood { background: #fde8e8; color: #a11212; }
+  .bloco.total { background: #e5f6e5; color: #1f7a1f; }
+
+  /* seletor de canal */
+  .canais { display: flex; gap: 10px; margin-top: 6px; }
+  .canais button {
+    flex: 1; padding: 16px 8px;
+    border: 3px solid var(--borda); border-radius: 14px;
+    background: #fff; font-size: 16px; font-weight: 700;
+    cursor: pointer; color: var(--cinza-texto);
+  }
+  .canais button.sel-loja { border-color: var(--laranja); background: #fff3e3; color: #8a4b00; }
+  .canais button.sel-ifood { border-color: var(--vermelho); background: #fde8e8; color: #a11212; }
+
+  /* DRE */
+  .dre-linha {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 10px 4px; font-size: 15px;
+    border-bottom: 1px dashed var(--borda);
+  }
+  .dre-linha .rotulo { flex: 1; }
+  .dre-linha .num { font-weight: 600; white-space: nowrap; }
+  .dre-linha.sub { font-size: 14px; color: var(--cinza-texto); padding-left: 18px; }
+  .dre-linha.total { font-weight: 800; font-size: 16px; border-bottom: 2px solid var(--preto); background: #faf8f4; }
+  .dre-linha.resultado { font-size: 19px; font-weight: 800; border: none; padding-top: 14px; }
+  .positivo { color: var(--verde-escuro); }
+  .negativo { color: #a11212; }
+  .aviso-pendente {
+    background: #fff3d6; color: #6b4c00;
+    border-radius: 12px; padding: 12px 14px;
+    font-size: 14px; margin-top: 14px;
+  }
+  .filtros { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; }
+  .filtros input[type="month"] { flex: 1; }
+  .abas-contas { display: flex; gap: 8px; margin-bottom: 12px; }
+  .abas-contas button {
+    flex: 1; padding: 10px; border-radius: 10px;
+    border: 2px solid var(--borda); background: #fff;
+    font-size: 14px; font-weight: 700; color: var(--cinza-texto); cursor: pointer;
+  }
+  .abas-contas button.ativo { border-color: var(--vermelho); color: var(--vermelho); background: #fde8e8; }
+  #carregando {
+    position: fixed; inset: 0; background: rgba(255,255,255,.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; font-size: 40px;
+  }
+  @keyframes girar { to { transform: rotate(360deg); } }
+  #carregando span { animation: girar 1.2s linear infinite; display: inline-block; }
+</style>
+</head>
+<body>
+
+<div id="carregando"><span>🍕</span></div>
+
+<!-- ============ LOGIN ============ -->
+<div id="tela-login" class="hidden">
+  <div class="card-login">
+    <h1>🍕 Controle Pizza</h1>
+    <p class="sub">Gestão financeira do delivery</p>
+    <label for="login-email">E-mail</label>
+    <input id="login-email" type="email" autocomplete="username" placeholder="seu@email.com">
+    <label for="login-senha">Senha</label>
+    <input id="login-senha" type="password" autocomplete="current-password" placeholder="Sua senha">
+    <button class="botao" id="btn-entrar">Entrar</button>
+    <div class="msg" id="login-msg"></div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hidden">
+  <header>
+    <h1>🍕 Controle Pizza</h1>
+    <button id="btn-sair">Sair</button>
+  </header>
+  <main>
+
+    <!-- ===== ABA LANÇAR ===== -->
+    <section id="aba-lancar">
+      <div class="cartao">
+        <h2>Vendas de hoje <small id="data-hoje"></small></h2>
+        <div class="resumo-dia">
+          <div class="bloco loja"><div class="rotulo">🏪 Loja</div><div class="num" id="hoje-loja">R$ 0</div></div>
+          <div class="bloco ifood"><div class="rotulo">📱 iFood</div><div class="num" id="hoje-ifood">R$ 0</div></div>
+          <div class="bloco total"><div class="rotulo">💰 Total</div><div class="num" id="hoje-total">R$ 0</div></div>
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2>➕ Lançar venda</h2>
+        <label>De onde veio o dinheiro?</label>
+        <div class="canais">
+          <button id="canal-loja" type="button">🏪 Loja / Balcão</button>
+          <button id="canal-ifood" type="button">📱 iFood</button>
+        </div>
+        <label for="venda-valor">Valor (R$)</label>
+        <input id="venda-valor" type="text" inputmode="decimal" placeholder="Ex.: 350,00">
+        <label for="venda-data">Dia da venda</label>
+        <input id="venda-data" type="date">
+        <button class="botao verde" id="btn-salvar-venda">✔ Salvar venda</button>
+      </div>
+
+      <div class="cartao">
+        <h2>Últimas vendas lançadas</h2>
+        <div id="lista-vendas"></div>
+      </div>
+    </section>
+
+    <!-- ===== ABA CONTAS ===== -->
+    <section id="aba-contas" class="hidden">
+      <div class="cartao">
+        <h2>➕ Nova conta a pagar</h2>
+        <label for="conta-desc">O que é? (descrição)</label>
+        <input id="conta-desc" type="text" placeholder="Ex.: Queijo mussarela 10kg">
+        <label for="conta-cat">Categoria</label>
+        <select id="conta-cat"></select>
+        <label for="conta-valor">Valor (R$)</label>
+        <input id="conta-valor" type="text" inputmode="decimal" placeholder="Ex.: 480,00">
+        <label for="conta-venc">Vencimento</label>
+        <input id="conta-venc" type="date">
+        <label style="display:flex;align-items:center;gap:10px;font-weight:600;margin-top:14px;">
+          <input type="checkbox" id="conta-ja-paga" style="width:22px;height:22px;">
+          Já paguei essa conta
+        </label>
+        <button class="botao" id="btn-salvar-conta">✔ Salvar conta</button>
+      </div>
+
+      <div class="cartao">
+        <h2>Contas</h2>
+        <div class="abas-contas">
+          <button id="filtro-abertas" class="ativo">A pagar</button>
+          <button id="filtro-pagas">Pagas</button>
+        </div>
+        <div id="lista-contas"></div>
+      </div>
+    </section>
+
+    <!-- ===== ABA DRE ===== -->
+    <section id="aba-dre" class="hidden">
+      <div class="cartao">
+        <h2>📊 DRE — Resultado do mês</h2>
+        <div class="filtros">
+          <input type="month" id="dre-mes">
+        </div>
+        <div id="dre-conteudo"></div>
+      </div>
+    </section>
+
+    <!-- ===== ABA CATEGORIAS ===== -->
+    <section id="aba-categorias" class="hidden">
+      <div class="cartao">
+        <h2>➕ Nova categoria</h2>
+        <label for="cat-nome">Nome</label>
+        <input id="cat-nome" type="text" placeholder="Ex.: Combustível">
+        <label for="cat-grupo">Onde entra no DRE?</label>
+        <select id="cat-grupo">
+          <option value="cmv">Ingrediente / Embalagem (custo do produto)</option>
+          <option value="taxas">Taxa ou imposto sobre a venda</option>
+          <option value="pessoal">Salário / Pagamento de pessoa</option>
+          <option value="fixas">Conta fixa (aluguel, luz, água...)</option>
+          <option value="outros" selected>Outras despesas</option>
+        </select>
+        <button class="botao" id="btn-salvar-cat">✔ Criar categoria</button>
+      </div>
+      <div class="cartao">
+        <h2>Categorias existentes</h2>
+        <div id="lista-categorias"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav>
+    <button data-aba="lancar" class="ativo"><span class="ico">💵</span>Lançar</button>
+    <button data-aba="contas"><span class="ico">📋</span>Contas</button>
+    <button data-aba="dre"><span class="ico">📊</span>DRE</button>
+    <button data-aba="categorias"><span class="ico">🏷️</span>Categorias</button>
+  </nav>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SUPABASE_URL = 'https://gohluceldchoitihrimw.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Su-BxUMybE1ysGiLxqNilg_YhYgItOJ';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = (id) => document.getElementById(id);
+const GRUPOS = { cmv: 'Ingredientes e embalagens', taxas: 'Taxas e impostos', pessoal: 'Pessoal', fixas: 'Contas fixas', outros: 'Outras despesas' };
+
+let categorias = [];
+let canalSelecionado = null;
+
+/* ---------- utilidades ---------- */
+function dinheiro(v) {
+  return (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+function parseValor(txt) {
+  if (!txt) return NaN;
+  txt = String(txt).replace(/[R$\s]/g, '');
+  if (txt.includes(',')) txt = txt.replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(txt);
+  return isNaN(n) ? NaN : Math.round(n * 100) / 100;
+}
+function hojeISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function dataBR(iso) {
+  if (!iso) return '';
+  const [a, m, d] = iso.split('-');
+  return `${d}/${m}/${a}`;
+}
+function toast(texto, tipo = 'ok') {
+  const t = $('toast');
+  t.textContent = texto;
+  t.className = `mostrar ${tipo}`;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = '', 2600);
+}
+function carregando(mostrar) { $('carregando').classList.toggle('hidden', !mostrar); }
+
+/* ---------- login ---------- */
+async function iniciar() {
+  const { data: { session } } = await sb.auth.getSession();
+  carregando(false);
+  if (session) { await entrarNoApp(); }
+  else { $('tela-login').classList.remove('hidden'); }
+}
+
+$('btn-entrar').addEventListener('click', fazerLogin);
+$('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+
+async function fazerLogin() {
+  const email = $('login-email').value.trim();
+  const senha = $('login-senha').value;
+  const msg = $('login-msg');
+  msg.className = 'msg';
+  if (!email || !senha) { msg.textContent = 'Preencha e-mail e senha.'; msg.className = 'msg erro'; return; }
+  $('btn-entrar').disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email, password: senha });
+  $('btn-entrar').disabled = false;
+  if (error) {
+    msg.textContent = 'E-mail ou senha errados. Tenta de novo com calma. 😉';
+    msg.className = 'msg erro';
+    return;
+  }
+  await entrarNoApp();
+}
+
+async function entrarNoApp() {
+  // confere se o usuario tem acesso ao modulo (RLS devolve vazio se nao tiver)
+  const { data } = await sb.from('pizza_usuarios').select('email').limit(1);
+  if (!data || data.length === 0) {
+    await sb.auth.signOut();
+    const msg = $('login-msg');
+    msg.textContent = 'Esse e-mail não tem acesso ao Controle Pizza.';
+    msg.className = 'msg erro';
+    $('tela-login').classList.remove('hidden');
+    return;
+  }
+  $('tela-login').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('venda-data').value = hojeISO();
+  $('conta-venc').value = hojeISO();
+  $('dre-mes').value = hojeISO().slice(0, 7);
+  $('data-hoje').textContent = '— ' + dataBR(hojeISO());
+  await carregarCategorias();
+  await Promise.all([carregarVendas(), carregarContas()]);
+}
+
+$('btn-sair').addEventListener('click', async () => {
+  if (!confirm('Quer mesmo sair?')) return;
+  await sb.auth.signOut();
+  location.reload();
+});
+
+/* ---------- navegação ---------- */
+document.querySelectorAll('nav button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(x => x.classList.remove('ativo'));
+    b.classList.add('ativo');
+    ['lancar','contas','dre','categorias'].forEach(a => $(`aba-${a}`).classList.add('hidden'));
+    $(`aba-${b.dataset.aba}`).classList.remove('hidden');
+    if (b.dataset.aba === 'dre') montarDRE();
+  });
+});
+
+/* ---------- vendas ---------- */
+$('canal-loja').addEventListener('click', () => escolherCanal('loja'));
+$('canal-ifood').addEventListener('click', () => escolherCanal('ifood'));
+function escolherCanal(c) {
+  canalSelecionado = c;
+  $('canal-loja').className = c === 'loja' ? 'sel-loja' : '';
+  $('canal-ifood').className = c === 'ifood' ? 'sel-ifood' : '';
+}
+
+$('btn-salvar-venda').addEventListener('click', async () => {
+  const valor = parseValor($('venda-valor').value);
+  const data = $('venda-data').value;
+  if (!canalSelecionado) return toast('Escolha: Loja ou iFood 👆', 'erro');
+  if (isNaN(valor) || valor <= 0) return toast('Digite o valor da venda', 'erro');
+  if (!data) return toast('Escolha o dia da venda', 'erro');
+  const btn = $('btn-salvar-venda'); btn.disabled = true;
+  const { error } = await sb.from('pizza_vendas').insert({ data, canal: canalSelecionado, valor });
+  btn.disabled = false;
+  if (error) return toast('Não deu pra salvar. Tenta de novo.', 'erro');
+  toast(`Venda de ${dinheiro(valor)} salva! 🎉`);
+  $('venda-valor').value = '';
+  await carregarVendas();
+});
+
+async function carregarVendas() {
+  const { data, error } = await sb.from('pizza_vendas')
+    .select('*').order('data', { ascending: false }).order('id', { ascending: false }).limit(15);
+  if (error) return;
+  const hoje = hojeISO();
+  let tLoja = 0, tIfood = 0;
+  (data || []).filter(v => v.data === hoje).forEach(v => {
+    if (v.canal === 'loja') tLoja += Number(v.valor); else tIfood += Number(v.valor);
+  });
+  $('hoje-loja').textContent = dinheiro(tLoja);
+  $('hoje-ifood').textContent = dinheiro(tIfood);
+  $('hoje-total').textContent = dinheiro(tLoja + tIfood);
+
+  const el = $('lista-vendas');
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="vazio">Nenhuma venda lançada ainda.<br>Use o formulário acima 👆</div>';
+    return;
+  }
+  el.innerHTML = data.map(v => `
+    <div class="item-lista">
+      <div class="info">
+        <div class="titulo">${v.canal === 'loja' ? '🏪 Loja' : '📱 iFood'}</div>
+        <div class="detalhe">${dataBR(v.data)}</div>
+      </div>
+      <div class="valor">${dinheiro(v.valor)}</div>
+      <button class="botao-mini vermelho-claro" data-del-venda="${v.id}" title="Apagar">🗑️</button>
+    </div>`).join('');
+  el.querySelectorAll('[data-del-venda]').forEach(b => b.addEventListener('click', async () => {
+    if (!confirm('Apagar essa venda?')) return;
+    await sb.from('pizza_vendas').delete().eq('id', b.dataset.delVenda);
+    toast('Venda apagada');
+    carregarVendas();
+  }));
+}
+
+/* ---------- categorias ---------- */
+async function carregarCategorias() {
+  const { data } = await sb.from('pizza_categorias').select('*').order('nome');
+  categorias = data || [];
+  const ativas = categorias.filter(c => c.ativo);
+  $('conta-cat').innerHTML = ativas.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  $('lista-categorias').innerHTML = categorias.map(c => `
+    <div class="item-lista" style="${c.ativo ? '' : 'opacity:.45'}">
+      <div class="info">
+        <div class="titulo">${c.nome}</div>
+        <div class="detalhe">${GRUPOS[c.grupo] || c.grupo}</div>
+      </div>
+      <button class="botao-mini ${c.ativo ? 'cinza' : 'verde'}" data-toggle-cat="${c.id}" data-ativo="${c.ativo}">
+        ${c.ativo ? 'Desativar' : 'Ativar'}
+      </button>
+    </div>`).join('');
+  $('lista-categorias').querySelectorAll('[data-toggle-cat]').forEach(b => b.addEventListener('click', async () => {
+    await sb.from('pizza_categorias').update({ ativo: b.dataset.ativo !== 'true' }).eq('id', b.dataset.toggleCat);
+    carregarCategorias();
+  }));
+}
+
+$('btn-salvar-cat').addEventListener('click', async () => {
+  const nome = $('cat-nome').value.trim();
+  if (!nome) return toast('Digite o nome da categoria', 'erro');
+  const { error } = await sb.from('pizza_categorias').insert({ nome, grupo: $('cat-grupo').value });
+  if (error) return toast(error.code === '23505' ? 'Já existe categoria com esse nome' : 'Erro ao salvar', 'erro');
+  toast('Categoria criada! 🏷️');
+  $('cat-nome').value = '';
+  carregarCategorias();
+});
+
+/* ---------- contas a pagar ---------- */
+let filtroContas = 'abertas';
+$('filtro-abertas').addEventListener('click', () => { filtroContas = 'abertas'; atualizarFiltro(); });
+$('filtro-pagas').addEventListener('click', () => { filtroContas = 'pagas'; atualizarFiltro(); });
+function atualizarFiltro() {
+  $('filtro-abertas').classList.toggle('ativo', filtroContas === 'abertas');
+  $('filtro-pagas').classList.toggle('ativo', filtroContas === 'pagas');
+  carregarContas();
+}
+
+$('btn-salvar-conta').addEventListener('click', async () => {
+  const descricao = $('conta-desc').value.trim();
+  const valor = parseValor($('conta-valor').value);
+  const vencimento = $('conta-venc').value;
+  const jaPaga = $('conta-ja-paga').checked;
+  if (!descricao) return toast('Escreva o que é essa conta', 'erro');
+  if (isNaN(valor) || valor <= 0) return toast('Digite o valor da conta', 'erro');
+  if (!vencimento) return toast('Escolha o vencimento', 'erro');
+  const btn = $('btn-salvar-conta'); btn.disabled = true;
+  const { error } = await sb.from('pizza_despesas').insert({
+    descricao, valor, vencimento,
+    categoria_id: Number($('conta-cat').value),
+    pago: jaPaga, pago_em: jaPaga ? hojeISO() : null
+  });
+  btn.disabled = false;
+  if (error) return toast('Não deu pra salvar. Tenta de novo.', 'erro');
+  toast('Conta salva! 📋');
+  $('conta-desc').value = ''; $('conta-valor').value = ''; $('conta-ja-paga').checked = false;
+  carregarContas();
+});
+
+async function carregarContas() {
+  let query = sb.from('pizza_despesas').select('*, pizza_categorias(nome)');
+  if (filtroContas === 'abertas') query = query.eq('pago', false).order('vencimento');
+  else query = query.eq('pago', true).order('vencimento', { ascending: false }).limit(40);
+  const { data, error } = await query;
+  if (error) return;
+  const el = $('lista-contas');
+  if (!data || data.length === 0) {
+    el.innerHTML = `<div class="vazio">${filtroContas === 'abertas' ? 'Nenhuma conta pendente. 🎉' : 'Nenhuma conta paga ainda.'}</div>`;
+    return;
+  }
+  const hoje = hojeISO();
+  el.innerHTML = data.map(c => {
+    let etiqueta = '';
+    if (c.pago) etiqueta = `<span class="etiqueta paga">✓ paga ${c.pago_em ? 'em ' + dataBR(c.pago_em) : ''}</span>`;
+    else if (c.vencimento < hoje) etiqueta = '<span class="etiqueta vencida">⚠ VENCIDA</span>';
+    else if (c.vencimento === hoje) etiqueta = '<span class="etiqueta hoje">vence HOJE</span>';
+    return `
+    <div class="item-lista">
+      <div class="info">
+        <div class="titulo">${c.descricao}</div>
+        <div class="detalhe">${c.pizza_categorias?.nome || ''} · vence ${dataBR(c.vencimento)}</div>
+        ${etiqueta}
+      </div>
+      <div class="valor">${dinheiro(c.valor)}</div>
+      ${c.pago
+        ? `<button class="botao-mini cinza" data-despagar="${c.id}">Desfazer</button>`
+        : `<button class="botao-mini verde" data-pagar="${c.id}">✓ Paguei</button>`}
+      <button class="botao-mini vermelho-claro" data-del-conta="${c.id}" title="Apagar">🗑️</button>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('[data-pagar]').forEach(b => b.addEventListener('click', async () => {
+    await sb.from('pizza_despesas').update({ pago: true, pago_em: hojeISO() }).eq('id', b.dataset.pagar);
+    toast('Conta marcada como paga ✓');
+    carregarContas();
+  }));
+  el.querySelectorAll('[data-despagar]').forEach(b => b.addEventListener('click', async () => {
+    await sb.from('pizza_despesas').update({ pago: false, pago_em: null }).eq('id', b.dataset.despagar);
+    carregarContas();
+  }));
+  el.querySelectorAll('[data-del-conta]').forEach(b => b.addEventListener('click', async () => {
+    if (!confirm('Apagar essa conta? Ela some do DRE também.')) return;
+    await sb.from('pizza_despesas').delete().eq('id', b.dataset.delConta);
+    toast('Conta apagada');
+    carregarContas();
+  }));
+}
+
+/* ---------- DRE ---------- */
+$('dre-mes').addEventListener('change', montarDRE);
+
+async function montarDRE() {
+  const mes = $('dre-mes').value; // "2026-07"
+  if (!mes) return;
+  const inicio = `${mes}-01`;
+  const [ano, m] = mes.split('-').map(Number);
+  const fim = new Date(ano, m, 0); // ultimo dia do mes
+  const fimISO = `${mes}-${String(fim.getDate()).padStart(2, '0')}`;
+
+  const [vendasRes, despesasRes] = await Promise.all([
+    sb.from('pizza_vendas').select('canal, valor').gte('data', inicio).lte('data', fimISO),
+    sb.from('pizza_despesas').select('valor, pago, pizza_categorias(nome, grupo)').gte('vencimento', inicio).lte('vencimento', fimISO)
+  ]);
+  const vendas = vendasRes.data || [];
+  const despesas = despesasRes.data || [];
+
+  let recLoja = 0, recIfood = 0;
+  vendas.forEach(v => v.canal === 'loja' ? recLoja += Number(v.valor) : recIfood += Number(v.valor));
+  const receitaBruta = recLoja + recIfood;
+
+  const porGrupo = { cmv: 0, taxas: 0, pessoal: 0, fixas: 0, outros: 0 };
+  const porCategoria = {};
+  let pendentes = 0, qtdPendentes = 0;
+  despesas.forEach(d => {
+    const g = d.pizza_categorias?.grupo || 'outros';
+    const nome = d.pizza_categorias?.nome || 'Sem categoria';
+    porGrupo[g] = (porGrupo[g] || 0) + Number(d.valor);
+    porCategoria[nome] = (porCategoria[nome] || 0) + Number(d.valor);
+    if (!d.pago) { pendentes += Number(d.valor); qtdPendentes++; }
+  });
+
+  const receitaLiquida = receitaBruta - porGrupo.taxas;
+  const lucroBruto = receitaLiquida - porGrupo.cmv;
+  const totalDespesasOp = porGrupo.pessoal + porGrupo.fixas + porGrupo.outros;
+  const resultado = lucroBruto - totalDespesasOp;
+  const margem = receitaBruta > 0 ? (resultado / receitaBruta * 100) : 0;
+
+  const num = (v, negativo = false) =>
+    `<span class="num ${negativo && v > 0 ? 'negativo' : ''}">${negativo && v > 0 ? '– ' : ''}${dinheiro(v)}</span>`;
+
+  const detalheCategorias = Object.entries(porCategoria)
+    .sort((a, b) => b[1] - a[1])
+    .map(([nome, v]) => `<div class="dre-linha sub"><span class="rotulo">${nome}</span>${num(v, true)}</div>`)
+    .join('');
+
+  $('dre-conteudo').innerHTML = `
+    <div class="dre-linha"><span class="rotulo">🏪 Vendas Loja / Balcão</span>${num(recLoja)}</div>
+    <div class="dre-linha"><span class="rotulo">📱 Vendas iFood</span>${num(recIfood)}</div>
+    <div class="dre-linha total"><span class="rotulo">RECEITA BRUTA</span>${num(receitaBruta)}</div>
+    <div class="dre-linha"><span class="rotulo">(–) Taxas e impostos</span>${num(porGrupo.taxas, true)}</div>
+    <div class="dre-linha total"><span class="rotulo">RECEITA LÍQUIDA</span>${num(receitaLiquida)}</div>
+    <div class="dre-linha"><span class="rotulo">(–) Ingredientes e embalagens (CMV)</span>${num(porGrupo.cmv, true)}</div>
+    <div class="dre-linha total"><span class="rotulo">LUCRO BRUTO</span>${num(lucroBruto)}</div>
+    <div class="dre-linha"><span class="rotulo">(–) Pessoal</span>${num(porGrupo.pessoal, true)}</div>
+    <div class="dre-linha"><span class="rotulo">(–) Contas fixas</span>${num(porGrupo.fixas, true)}</div>
+    <div class="dre-linha"><span class="rotulo">(–) Outras despesas</span>${num(porGrupo.outros, true)}</div>
+    <div class="dre-linha resultado">
+      <span class="rotulo">${resultado >= 0 ? '✅ LUCRO DO MÊS' : '🔴 PREJUÍZO DO MÊS'}</span>
+      <span class="num ${resultado >= 0 ? 'positivo' : 'negativo'}">${dinheiro(resultado)}</span>
+    </div>
+    <div class="dre-linha sub" style="border:none"><span class="rotulo">Margem sobre a venda</span>
+      <span class="num ${resultado >= 0 ? 'positivo' : 'negativo'}">${margem.toFixed(1).replace('.', ',')}%</span></div>
+    ${qtdPendentes > 0 ? `<div class="aviso-pendente">⚠️ Atenção: ${qtdPendentes} conta(s) deste mês ainda não foram pagas (${dinheiro(pendentes)}). Elas já estão descontadas no resultado acima.</div>` : ''}
+    ${detalheCategorias ? `<h2 style="margin-top:22px;font-size:15px;">Gastos por categoria</h2>${detalheCategorias}` : ''}
+    ${receitaBruta === 0 && despesas.length === 0 ? '<div class="vazio">Nada lançado nesse mês ainda.</div>' : ''}
+  `;
+}
+
+iniciar();
+</script>
+</body>
+</html>
